@@ -7,7 +7,8 @@ from django.contrib.auth.views import login, logout
 import cms.views
 import settings
 
-from cms.feed import LatestBlogEntriesFeed
+from cms.feed import RssLatestBlogEntriesFeed
+from cms.feed import AtomLatestBlogEntriesFeed
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -44,7 +45,11 @@ urlpatterns = patterns('',
     url(r'^result/(?P<name>.*)/$', cms.views.show_result),
     url(r'^send_message/$', cms.views.site_message_form),
     
-    url(r'^rss/$', LatestBlogEntriesFeed()),
+    url(r'^(?P<nickname>.*)/(?P<topic>.*)/rss/$', RssLatestBlogEntriesFeed()),
+#    url(r'^(?P<topic>.*)/rss/$', cms.views.rss_test),
+    url(r'^(?P<nickname>.*)/(?P<topic>.*)/atom/$', AtomLatestBlogEntriesFeed()),
+    url(r'^(?P<nickname>.*)/rss/$', RssLatestBlogEntriesFeed()),
+    url(r'^(?P<nickname>.*)/atom/$', AtomLatestBlogEntriesFeed()),
 
     url(r'^', cms.views.hi)
 )

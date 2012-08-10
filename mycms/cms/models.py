@@ -18,6 +18,7 @@ from django.template import RequestContext
 from django.forms import ModelForm, Textarea, HiddenInput
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, redirect
+from django.contrib.auth.models import User
 
 import mycms.settings as settings
 
@@ -123,6 +124,7 @@ class BlogPage(BasePage):
   4. Добавление: BlogEntry доб-ся и изменяется через админку
   '''
   #base_page = models.OneToOneField(BasePage, verbose_name='Родитель', related_name='blog_page')
+  user = models.ForeignKey(User, verbose_name='Пользователь', null=True, blank=True, unique=True)
   
   def get_content(self, request, *args, **kwargs):
     #содержимое данной странички - список записей блогу
@@ -162,7 +164,7 @@ class BlogEntry(StandardPage):
     #standard_page = models.OneToOneField(StandardPage, verbose_name='Родитель', related_name='blog_entry')
     blog = models.ForeignKey(BlogPage, verbose_name='Опубликовать в', null=True, blank=True)
     comment_allowed = models.CharField(max_length=1, verbose_name='Разрешить комментарии', choices=YN_CHOICES)
-    topic = models.ForeignKey('BlogEntryTopic', verbose_name='Тема', null=True, blank=True)
+    topic = models.ManyToManyField('BlogEntryTopic', verbose_name='Тема', null=True, blank=True)
 
     def get_content(self, request, *args, **kwargs):
         show_form = False
@@ -270,6 +272,7 @@ class UserProfile(models.Model):
   user = models.OneToOneField(User, verbose_name='Аккаунт')
   last_visited_url=models.CharField(max_length=240, null=True, blank=True, verbose_name='Последний открытый URL')
   default_tz = models.CharField(max_length=100, choices=TZ, verbose_name='Часовой пояс', default='Europe/Moscow') 
+  nickname = models.CharField(max_length=30, unique=True, verbose_name='Псевдоним для блога',null=True, blank=True)
   
   def __unicode__(self):
     return self.user.username + '_profile'
@@ -375,7 +378,6 @@ class BlogCommentForm(ModelForm):
                    'text': Textarea(),
                   }
 
-  
 
   
   
