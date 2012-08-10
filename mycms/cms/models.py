@@ -20,6 +20,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, redirect
 from django.contrib.auth.models import User
 
+from recaptcha.field import ReCaptchaField
+
 import mycms.settings as settings
 
 YN_CHOICES = (
