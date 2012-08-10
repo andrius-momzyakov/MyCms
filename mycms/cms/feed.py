@@ -21,7 +21,8 @@ class RssLatestBlogEntriesFeed(Feed):
         return BlogEntry.objects.filter(close_date__isnull=True, blog=obj[1]).order_by('-pub_date')
       for x in BlogEntry.objects.filter(close_date__isnull=True, blog=obj[1]).order_by('-pub_date'):
         if x.topic.filter(topic=obj[0]):
-            items.append(x)
+            if x.section.is_active=='Y':
+                items.append(x)
       return items
     def item_title(self, obj):
       return obj.title
