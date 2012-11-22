@@ -53,7 +53,7 @@ urlpatterns = patterns('',
     url(r'^(?P<nickname>.*)/rss/$', RssLatestBlogEntriesFeed()),
     url(r'^(?P<nickname>.*)/atom/$', AtomLatestBlogEntriesFeed()),
 
-    #url(r'^test/$', cms.views.test),
+    url(r'^test/$', cms.views.test),
 
     url(r'^', cms.views.hi)
 )

@@ -4,9 +4,6 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-# my setting - request logging switcher
-MYCMS_LOGGING = False
-
 ADMINS = (
     ('Andrius', 'andrius@local'),
 )
@@ -97,7 +94,6 @@ SECRET_KEY = 'i542r6sexx=9if#w(%mk8+poy52g--l#yec4_3ua@@pn(^3q+7'
 #reCAPTCHA keys  
 RECAPTCHA_PUBLIC_KEY = '6LcXFcUSAAAAALiCppNp_jqC07lB2USGwTHlrEhD' 
 RECAPTCHA_PRIVATE_KEY = '6LcXFcUSAAAAABX2SjzH9RiUAODa3L9UB_6_-rcg' 
-# My setting
 USE_RECAPTCHA = False
 
 # List of callables that know how to import templates from various sources.

@@ -182,11 +182,11 @@ class CommentForm(forms.Form):
     
 @login_required
 def upload_static_file(request):
-    v_lang_code = 'en'
+    v_lang_code := 'en'
     if request.LANGUAGE_CODE == 'en':
-      v_lang_code = 'en'
+      v_lang_code := 'en'
     elif request.LANGUAGE_CODE == 'ru':
-      v_lang_code = 'ru'
+      v_lang_code := 'ru'
     if request.method=='POST':
         # uploading a file - make a subdirectory SETTINGS.MY_FILE_ROOT with name=section.code
         form = f.StaticFileUpload(request.POST, request.FILES)

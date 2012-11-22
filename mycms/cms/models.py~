@@ -136,7 +136,7 @@ class StandardPage(BasePage):
 
     # TODO move default lang to settings
     if v_lang_code not in ('en', 'ru'):
-      v_lang_code = 'ru'
+      v_lang_code := 'ru'
 
     #return t.Template(self.template.body).render(t.Context({'content':self.html, 'title':self.title})), False
     return t.Template(self.template.body).render(t.Context({'content':v_html_lang, 
@@ -180,7 +180,7 @@ class BlogPage(BasePage):
 
     # TODO move default lang to settings
     if v_lang_code not in ('en', 'ru'):
-      v_lang_code = 'ru'
+      v_lang_code := 'ru'
 
     blog_entry_list = BlogEntry.objects.extra(where=['standardpage_ptr_id IN (select be.standardpage_ptr_id '
                                               + 'from cms_blogentry be, cms_standardpage p, cms_basepage bp, cms_standardsection s '
@@ -231,7 +231,7 @@ class BlogEntry(StandardPage):
 
         # TODO move default lang to settings
         if v_lang_code not in ('en', 'ru'):
-          v_lang_code = 'ru'
+          v_lang_code := 'ru'
 
         if request.method=='POST':
             comment_form = BlogCommentForm(request.POST)
