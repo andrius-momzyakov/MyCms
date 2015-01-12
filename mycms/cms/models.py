@@ -24,6 +24,8 @@ from recaptcha.field import ReCaptchaField
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 import mycms.settings as settings
+import django.core.exceptions as ex
+
 
 YN_CHOICES = (
 ('Y', _('Yes')), ('N', _('No')),
@@ -55,7 +57,7 @@ class StandardSection(models.Model):
         return ''
     
   def __unicode__(self):
-     return str(self.id) + '_' + self.code + '_' + self.name
+     return self.code #+ '_' + self.name
 	 
   def get_id(self):
     return int(self.id)
@@ -120,7 +122,10 @@ class BasePage(models.Model):
     
   class Meta:
     get_latest_by = 'pub_date'
-  
+    
+  def section_code(self):
+    return self.section.code
+
 class StandardPage(BasePage):
   '''
   class for standard HTML page: each page is revision, last revision is always taken in view!
@@ -128,7 +133,7 @@ class StandardPage(BasePage):
   html = models.TextField(verbose_name=_('content HTML'))
   html_en = models.TextField(verbose_name=_('content HTML (english)'), blank=True, null=True )
   html_ru = models.TextField(verbose_name=_('content HTML (russian)'), blank=True, null=True)
-
+  
   def get_content(self, request, *args, **kwargs):
     v_lang_code = self.get_lang_code(request, *args, **kwargs)
     v_html_lang = self.get_html_in_lang(v_lang_code)
@@ -141,7 +146,8 @@ class StandardPage(BasePage):
     #return t.Template(self.template.body).render(t.Context({'content':self.html, 'title':self.title})), False
     return t.Template(self.template.body).render(t.Context({'content':v_html_lang, 
                                                    'title':v_title_lang, 
-                                                   'lang_code':v_lang_code})), False
+                                                   'lang_code':v_lang_code,
+                                                   'translations':self.get_available_langs(request, *args, **kwargs)})), False
 
   def get_html_in_lang(self, lang_code=None):
     if lang_code == 'en':
@@ -157,7 +163,45 @@ class StandardPage(BasePage):
     if self.html_en:
       langs += '<A href="/content/' + self.section.code + '/en/">' + u'English' + '</a></p><br>'
     return langs + self.html
+  
+  # 2012.11.30 - added to let Admin show leaf objects only
+  def has_descendants(self):
+    # checking BlogEnty descendants - for
+    # additional filtering@admin site 
+    try:
+      obj = BlogEntry.objects.get(pk=self.id)
+      return True
+    except:
+      return False
+      
+  def get_available_langs(self, request, *args, **kwargs):
+    '''
+    15/01/2013
+    reurns a list of anchors to all available translations
+    '''
+    all_translations = ['en', 'ru']
+    hrefs = ''
+    v_lang_code = self.get_lang_code(request, *args, **kwargs)
+    if v_lang_code not in ('en', 'ru'):
+      v_lang_code = 'ru'
+
+    # take off current content language from list
+    all_translations.remove(v_lang_code)
+    for lang in all_translations:
+      if lang=='ru' and not self.html_ru:
+        all_translations.remove(lang)
+      elif lang=='en' and not self.html_en:
+        all_translations.remove(lang)
     
+    for lang in all_translations:
+      if hrefs=='':
+        if v_lang_code=='ru':
+          hrefs += u'Переводы: '
+        elif v_lang_code=='en':
+          hrefs += u'Translations: '
+      hrefs += '<A href="/content/' + self.section.code + '/' + lang + '/">' + '&nbsp;' + lang + '</a>' 
+       
+    return hrefs
 
 class BlogPage(BasePage):
   '''
@@ -172,6 +216,7 @@ class BlogPage(BasePage):
   3. TODO: special owner's mark in Admin part to let comment to be shown
   '''
   user = models.ForeignKey(User, verbose_name=_('User'), null=True, blank=True, unique=True)
+  nickname = models.CharField(max_length=80, verbose_name=_('Author\'s nickname'))
   
   def get_content(self, request, *args, **kwargs):
     # Blog's content is a list of blog entries' title
@@ -241,7 +286,7 @@ class BlogEntry(StandardPage):
                 comment.blog_entry = self
                 comment.save()
                 from django.core.mail import send_mail
-                send_mail('[e-pyfan.com]' + u'Комментарий на ' + comment.blog_entry.section.code, 
+                send_mail('[e-pyfan.com] ' + u'Комментарий на ' + comment.blog_entry.section.code, 
                                     u'Отправил: ' + comment.name + ' ' + str(comment.creation_time) + '\n' +  
                                     u'Текст комментария: ' + comment.text + ' ' + u'Связь: ' + comment.email,
                                    settings.ADMINS[0][1], [settings.ADMINS[0][1]], fail_silently=False)
@@ -258,7 +303,8 @@ class BlogEntry(StandardPage):
                                                     'comments':comments, 
                                                     'comment_form':comment_form,
                                                     'blog_entry':self,
-                                                    'lang_code':v_lang_code})
+                                                    'lang_code':v_lang_code,
+                                                    'translations':self.get_available_langs(request, *args, **kwargs)})
               return t.Template(self.template.body).render(t.Context(context_instance)), True # to reload page when POST sent
         else:
             if request.GET.get('show_form')=='yes':
@@ -283,17 +329,19 @@ class BlogEntry(StandardPage):
                                                     'comments':comments, 
                                                     'comment_form':comment_form,
                                                     'blog_entry':self,
-                                                    'lang_code':v_lang_code})
+                                                    'lang_code':v_lang_code,
+                                                    'translations':self.get_available_langs(request, *args, **kwargs)})
         else:
             context_instance.update({'content':v_html_lang, 'title':v_title_lang, 
                                                     'comments':comments, 'comment_link':comment_link, #'comment_form':comment_form,
                                                     'blog_entry':self,
-                                                    'lang_code':v_lang_code})
+                                                    'lang_code':v_lang_code,
+                                                    'translations':self.get_available_langs(request, *args, **kwargs)})
         return t.Template(self.template.body).render(t.Context(context_instance)), show_form
     
     def __unicode__(self):
         if self.blog:
-            return self.blog.section.code + '_' + self.title
+            return self.blog.section.code #+ '_' + self.title
         return self.title
         
     def get_count(self):
@@ -305,8 +353,8 @@ class BlogEntry(StandardPage):
     def get_rss_content(self, max_length=100):
         # In RSS item's header first <P>...</p> is always included
         import re
-        first_paragraph = re.split(u'<[Pp]>', re.split('</[Pp]>', self.html)[0])[1]
-        return t.Template(Template.objects.get(code='PLAIN').body).render(t.Context({'content':first_paragraph}))[:max_length] 
+        first_paragraph = re.split(u'<[Pp][^<>]*>', re.split('</[Pp][^<>]*>', self.html)[0])[1]
+        return t.Template(Template.objects.get(code='PLAIN').body).render(t.Context({'content':first_paragraph}))[:max_length]
         
 class BlogEntryTopic(models.Model):
     '''
