@@ -444,7 +444,7 @@ class RequestLog(models.Model):
     
     def populate(self, request):
         try:
-          self.path = request.get_full_path()
+          self.path = request.get_full_path()[:2000]
         except:
           None
         try:
@@ -452,7 +452,7 @@ class RequestLog(models.Model):
         except:
           None
         try:
-          self.referer = request.META['HTTP_REFERER']
+          self.referer = request.META['HTTP_REFERER'][:2000]
         except:
           None
         try:
